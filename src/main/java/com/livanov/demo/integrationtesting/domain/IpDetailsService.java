@@ -1,5 +1,6 @@
 package com.livanov.demo.integrationtesting.domain;
 
+import com.livanov.demo.integrationtesting.domain.ports.CachedIpDetailsService;
 import com.livanov.demo.integrationtesting.domain.ports.IpDetailsRepository;
 import com.livanov.demo.integrationtesting.domain.ports.RemoteIpDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,17 @@ public class IpDetailsService {
 
     private final RemoteIpDetailsService remoteService;
     private final IpDetailsRepository repository;
+    private final CachedIpDetailsService cachedService;
 
     public IpDetails getInfo(String ip) {
+
+        Optional<IpDetails> ipInfoFromCache = tryGetFromCache(ip);
+
+        if (ipInfoFromCache.isPresent()) {
+            log.info("IpDetails [{}]     retrieved from Cache.", ip);
+
+            return ipInfoFromCache.get();
+        }
 
         Optional<IpDetails> ipInfoFromDb = tryGetFromDb(ip);
 
@@ -29,6 +39,7 @@ public class IpDetailsService {
             log.info("IpDetails [{}]     retrieved from Database.", ip);
 
             IpDetails ipDetails = ipInfoFromDb.get();
+            trySaveToCache(ipDetails);
 
             return ipDetails;
         }
@@ -40,6 +51,7 @@ public class IpDetailsService {
 
             IpDetails ipDetails = ipInfoFromService.get();
             trySaveToDb(ipDetails);
+            trySaveToCache(ipDetails);
 
             return ipDetails;
         }
@@ -55,10 +67,28 @@ public class IpDetailsService {
                 .collect(toList());
     }
 
+    private Optional<IpDetails> tryGetFromCache(String ip) {
+        try {
+            return cachedService.getInfo(ip);
+        } catch (Exception ex) {
+            log.warn("IpDetails [" + ip + "] NOT retrieved from Cache.");
+            return Optional.empty();
+        }
+    }
+
+    private void trySaveToCache(IpDetails ipDetails) {
+        try {
+            cachedService.cache(ipDetails);
+            log.debug("IpDetails [{}]     saved to Cache.", ipDetails.getIp());
+        } catch (Exception ex) {
+            log.warn("IpDetails [" + ipDetails.getIp() + "] NOT saved to Cache.");
+        }
+    }
+
     private Optional<IpDetails> tryGetFromDb(String ip) {
         try {
             return repository.findOneByIp(ip);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             log.warn("IpDetails [" + ip + "] NOT retrieved from Database.");
             return Optional.empty();
         }

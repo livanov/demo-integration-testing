@@ -13,8 +13,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: "demo-password"
       SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "500"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      ADAPTERS_REDIS_URI: "http://demo-redis:6379/"
     depends_on:
       - demo-postgres
+      - demo-redis
 
   demo-postgres:
     container_name: "demo-postgres"
@@ -25,3 +27,15 @@ services:
       POSTGRES_USER: "demo-user"
       POSTGRES_PASSWORD: "demo-password"
       POSTGRES_DB: "demo-db"
+
+  demo-redis:
+    image: "redis:6.0.8-alpine"
+    container_name: "demo-redis"
+    ports:
+      - 6379:6379
+
+  demo-redis-ui:
+    image: "marian/rebrow"
+    container_name: "demo-redis-ui"
+    ports:
+      - 5001:5001

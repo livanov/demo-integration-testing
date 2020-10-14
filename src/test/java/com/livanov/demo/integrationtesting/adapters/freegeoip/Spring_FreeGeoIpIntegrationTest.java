@@ -30,7 +30,7 @@ class Spring_FreeGeoIpIntegrationTest {
     void successful_response_is_deserialized_correctly() {
 
         // GIVEN
-        server.expect(once(), requestTo("/json/1.1.1.1"))
+        server.expect(once(), requestTo("json/1.1.1.1"))
                 .andExpect(method(GET))
                 .andRespond(withSuccess(JSONObject.wrap(new HashMap<String, Object>() {
                     {

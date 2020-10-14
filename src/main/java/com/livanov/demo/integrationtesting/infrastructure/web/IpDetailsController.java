@@ -17,6 +17,11 @@ public class IpDetailsController {
 
     private final IpDetailsService service;
 
+    @GetMapping("ip")
+    public List<IpDetails> getAll() {
+        return service.getAll();
+    }
+
     @GetMapping("ip/{ip}")
     public IpDetails getSingle(@PathVariable("ip") String ip) {
         return service.getInfo(ip);
